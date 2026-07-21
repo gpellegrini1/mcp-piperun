@@ -121,6 +121,18 @@ interface CreateCompanyArgs {
   owner_id: number;
   email?: string;
   phone?: string;
+  cnpj?: string;
+  company_name?: string;
+  company_type?: number;
+  is_brand?: boolean;
+  is_supplier?: boolean;
+  is_client?: boolean;
+  is_carrier?: boolean;
+  is_franchise?: boolean;
+  is_channel?: boolean;
+  is_distributor?: boolean;
+  is_manufacturer?: boolean;
+  is_partner?: boolean;
 }
 
 interface UpdateCompanyArgs {
@@ -129,6 +141,18 @@ interface UpdateCompanyArgs {
   owner_id?: number;
   email?: string;
   phone?: string;
+  cnpj?: string;
+  company_name?: string;
+  company_type?: number;
+  is_brand?: boolean;
+  is_supplier?: boolean;
+  is_client?: boolean;
+  is_carrier?: boolean;
+  is_franchise?: boolean;
+  is_channel?: boolean;
+  is_distributor?: boolean;
+  is_manufacturer?: boolean;
+  is_partner?: boolean;
 }
 
 interface CreateDealArgs {
@@ -294,7 +318,19 @@ function isValidCreateCompanyArgs(args: unknown): args is CreateCompanyArgs {
     a.name.trim() !== '' &&
     typeof a.owner_id === 'number' &&
     (a.email === undefined || typeof a.email === 'string') &&
-    (a.phone === undefined || typeof a.phone === 'string')
+    (a.phone === undefined || typeof a.phone === 'string') &&
+    (a.cnpj === undefined || typeof a.cnpj === 'string') &&
+    (a.company_name === undefined || typeof a.company_name === 'string') &&
+    (a.company_type === undefined || typeof a.company_type === 'number') &&
+    (a.is_brand === undefined || typeof a.is_brand === 'boolean') &&
+    (a.is_supplier === undefined || typeof a.is_supplier === 'boolean') &&
+    (a.is_client === undefined || typeof a.is_client === 'boolean') &&
+    (a.is_carrier === undefined || typeof a.is_carrier === 'boolean') &&
+    (a.is_franchise === undefined || typeof a.is_franchise === 'boolean') &&
+    (a.is_channel === undefined || typeof a.is_channel === 'boolean') &&
+    (a.is_distributor === undefined || typeof a.is_distributor === 'boolean') &&
+    (a.is_manufacturer === undefined || typeof a.is_manufacturer === 'boolean') &&
+    (a.is_partner === undefined || typeof a.is_partner === 'boolean')
   );
 }
 
@@ -306,7 +342,19 @@ function isValidUpdateCompanyArgs(args: unknown): args is UpdateCompanyArgs {
     (a.name === undefined || typeof a.name === 'string') &&
     (a.owner_id === undefined || typeof a.owner_id === 'number') &&
     (a.email === undefined || typeof a.email === 'string') &&
-    (a.phone === undefined || typeof a.phone === 'string')
+    (a.phone === undefined || typeof a.phone === 'string') &&
+    (a.cnpj === undefined || typeof a.cnpj === 'string') &&
+    (a.company_name === undefined || typeof a.company_name === 'string') &&
+    (a.company_type === undefined || typeof a.company_type === 'number') &&
+    (a.is_brand === undefined || typeof a.is_brand === 'boolean') &&
+    (a.is_supplier === undefined || typeof a.is_supplier === 'boolean') &&
+    (a.is_client === undefined || typeof a.is_client === 'boolean') &&
+    (a.is_carrier === undefined || typeof a.is_carrier === 'boolean') &&
+    (a.is_franchise === undefined || typeof a.is_franchise === 'boolean') &&
+    (a.is_channel === undefined || typeof a.is_channel === 'boolean') &&
+    (a.is_distributor === undefined || typeof a.is_distributor === 'boolean') &&
+    (a.is_manufacturer === undefined || typeof a.is_manufacturer === 'boolean') &&
+    (a.is_partner === undefined || typeof a.is_partner === 'boolean')
   );
 }
 
@@ -475,6 +523,8 @@ interface CompanyData {
   name: string;
   email?: string;
   phone?: string;
+  cnpj?: string;
+  is_brand?: boolean;
   owner?: { name: string };
 }
 
@@ -552,7 +602,8 @@ function formatPersonSummary(person: PersonData): string {
 
 function formatCompanySummary(company: CompanyData): string {
   const contact = [company.email, company.phone].filter(Boolean).join(' | ') || 'Sem contato';
-  return `[${company.id}] ${company.name} | ${contact}`;
+  const brand = company.is_brand ? ' | Marca' : '';
+  return `[${company.id}] ${company.name} | ${contact}${company.cnpj ? ` | CNPJ: ${company.cnpj}` : ''}${brand}`;
 }
 
 function formatActivitySummary(activity: ActivityData): string {
@@ -894,7 +945,31 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
 
       // ===== EMPRESAS (COMPANIES) =====
-      { name: 'list_companies', description: 'Lista empresas.', inputSchema: paginatedSchema },
+      {
+        name: 'list_companies',
+        description: 'Lista empresas.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            page: { type: 'integer', description: '(Opcional) Número da página (padrão: 1)' },
+            show: {
+              type: 'integer',
+              description: '(Opcional) Quantidade por página (padrão: 20, máx: 200)',
+            },
+            name: { type: 'string', description: '(Opcional) Filtrar por nome da empresa' },
+            cnpj: {
+              type: 'string',
+              description:
+                "(Opcional) Filtrar por CNPJ. Formatos aceitos: 'XXXXXXXX0001XX' ou 'XX.XXX.XXX/0001-XX'",
+            },
+          },
+          required: [],
+        },
+      },
       {
         name: 'get_company',
         description: 'Obtém detalhes de uma empresa.',
@@ -924,6 +999,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             owner_id: { type: 'integer', description: 'ID do responsável' },
             email: { type: 'string', description: '(Opcional) Email' },
             phone: { type: 'string', description: '(Opcional) Telefone' },
+            cnpj: {
+              type: 'string',
+              description:
+                "(Opcional) CNPJ. Formatos aceitos: 'XXXXXXXX0001XX' ou 'XX.XXX.XXX/0001-XX'",
+            },
+            company_name: { type: 'string', description: '(Opcional) Razão social' },
+            company_type: {
+              type: 'integer',
+              description:
+                '(Opcional) Classificação: 1=Cliente, 2=Fornecedor, 3=Franquia, 4=Transportadora, 5=Canal',
+            },
+            is_brand: { type: 'boolean', description: '(Opcional) Empresa é uma marca' },
+            is_supplier: { type: 'boolean', description: '(Opcional) Empresa é um fornecedor' },
+            is_client: { type: 'boolean', description: '(Opcional) Empresa é um cliente' },
+            is_carrier: { type: 'boolean', description: '(Opcional) Empresa é uma transportadora' },
+            is_franchise: { type: 'boolean', description: '(Opcional) Empresa é uma franquia' },
+            is_channel: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é um canal de vendas',
+            },
+            is_distributor: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é uma distribuidora',
+            },
+            is_manufacturer: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é uma fabricante',
+            },
+            is_partner: { type: 'boolean', description: '(Opcional) Empresa é uma parceira' },
           },
           required: ['name', 'owner_id'],
         },
@@ -943,6 +1047,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             owner_id: { type: 'integer', description: '(Opcional) Novo responsável' },
             email: { type: 'string', description: '(Opcional) Novo email' },
             phone: { type: 'string', description: '(Opcional) Novo telefone' },
+            cnpj: {
+              type: 'string',
+              description:
+                "(Opcional) CNPJ. Formatos aceitos: 'XXXXXXXX0001XX' ou 'XX.XXX.XXX/0001-XX'",
+            },
+            company_name: { type: 'string', description: '(Opcional) Razão social' },
+            company_type: {
+              type: 'integer',
+              description:
+                '(Opcional) Classificação: 1=Cliente, 2=Fornecedor, 3=Franquia, 4=Transportadora, 5=Canal',
+            },
+            is_brand: { type: 'boolean', description: '(Opcional) Empresa é uma marca' },
+            is_supplier: { type: 'boolean', description: '(Opcional) Empresa é um fornecedor' },
+            is_client: { type: 'boolean', description: '(Opcional) Empresa é um cliente' },
+            is_carrier: { type: 'boolean', description: '(Opcional) Empresa é uma transportadora' },
+            is_franchise: { type: 'boolean', description: '(Opcional) Empresa é uma franquia' },
+            is_channel: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é um canal de vendas',
+            },
+            is_distributor: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é uma distribuidora',
+            },
+            is_manufacturer: {
+              type: 'boolean',
+              description: '(Opcional) Empresa é uma fabricante',
+            },
+            is_partner: { type: 'boolean', description: '(Opcional) Empresa é uma parceira' },
           },
           required: ['company_id'],
         },
