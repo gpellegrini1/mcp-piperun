@@ -183,6 +183,82 @@ interface UpdateActivityArgs {
   description?: string;
 }
 
+interface CreateGoalArgs {
+  title: string;
+  type: number;
+  start_at: string;
+  end_at: string;
+  visibility?: number;
+  goal_for?: number;
+  observation?: string;
+  type_of_period?: number;
+  activity_type_id?: number;
+  origin_id?: number;
+  region_id?: number;
+  city_id?: number;
+  state?: string;
+  segment_id?: number;
+  pipelines?: number[];
+  stages?: number[];
+  tags?: number[];
+  users?: number[];
+}
+
+interface UpdateGoalArgs {
+  goal_id: number;
+  title?: string;
+  type?: number;
+  start_at?: string;
+  end_at?: string;
+  visibility?: number;
+  goal_for?: number;
+  observation?: string;
+  type_of_period?: number;
+  activity_type_id?: number;
+  origin_id?: number;
+  region_id?: number;
+  city_id?: number;
+  state?: string;
+  segment_id?: number;
+  pipelines?: number[];
+  stages?: number[];
+  tags?: number[];
+  users?: number[];
+}
+
+interface CreateItemArgs {
+  name: string;
+  type: number;
+  category_id?: number;
+  reference?: string;
+  code?: string;
+  commission?: number;
+  cost?: number;
+  status?: boolean;
+  minimum_value?: number;
+  ipi_tax?: number;
+  description?: string;
+  photo?: string;
+  brand_id?: number;
+}
+
+interface UpdateItemArgs {
+  item_id: number;
+  name?: string;
+  type?: number;
+  category_id?: number;
+  reference?: string;
+  code?: string;
+  commission?: number;
+  cost?: number;
+  status?: boolean;
+  minimum_value?: number;
+  ipi_tax?: number;
+  description?: string;
+  photo?: string;
+  brand_id?: number;
+}
+
 // Type guards
 function isValidCreatePersonArgs(args: unknown): args is CreatePersonArgs {
   if (typeof args !== 'object' || args === null) return false;
@@ -309,6 +385,66 @@ function isValidUpdateActivityArgs(args: unknown): args is UpdateActivityArgs {
   );
 }
 
+function isValidCreateGoalArgs(args: unknown): args is CreateGoalArgs {
+  if (typeof args !== 'object' || args === null) return false;
+  const a = args as Record<string, unknown>;
+  return (
+    typeof a.title === 'string' &&
+    a.title.trim() !== '' &&
+    typeof a.type === 'number' &&
+    typeof a.start_at === 'string' &&
+    typeof a.end_at === 'string'
+  );
+}
+
+function isValidUpdateGoalArgs(args: unknown): args is UpdateGoalArgs {
+  if (typeof args !== 'object' || args === null) return false;
+  const a = args as Record<string, unknown>;
+  return typeof a.goal_id === 'number';
+}
+
+function isValidCreateItemArgs(args: unknown): args is CreateItemArgs {
+  if (typeof args !== 'object' || args === null) return false;
+  const a = args as Record<string, unknown>;
+  return (
+    typeof a.name === 'string' &&
+    a.name.trim() !== '' &&
+    typeof a.type === 'number' &&
+    (a.category_id === undefined || typeof a.category_id === 'number') &&
+    (a.reference === undefined || typeof a.reference === 'string') &&
+    (a.code === undefined || typeof a.code === 'string') &&
+    (a.commission === undefined || typeof a.commission === 'number') &&
+    (a.cost === undefined || typeof a.cost === 'number') &&
+    (a.status === undefined || typeof a.status === 'boolean') &&
+    (a.minimum_value === undefined || typeof a.minimum_value === 'number') &&
+    (a.ipi_tax === undefined || typeof a.ipi_tax === 'number') &&
+    (a.description === undefined || typeof a.description === 'string') &&
+    (a.photo === undefined || typeof a.photo === 'string') &&
+    (a.brand_id === undefined || typeof a.brand_id === 'number')
+  );
+}
+
+function isValidUpdateItemArgs(args: unknown): args is UpdateItemArgs {
+  if (typeof args !== 'object' || args === null) return false;
+  const a = args as Record<string, unknown>;
+  return (
+    typeof a.item_id === 'number' &&
+    (a.name === undefined || typeof a.name === 'string') &&
+    (a.type === undefined || typeof a.type === 'number') &&
+    (a.category_id === undefined || typeof a.category_id === 'number') &&
+    (a.reference === undefined || typeof a.reference === 'string') &&
+    (a.code === undefined || typeof a.code === 'string') &&
+    (a.commission === undefined || typeof a.commission === 'number') &&
+    (a.cost === undefined || typeof a.cost === 'number') &&
+    (a.status === undefined || typeof a.status === 'boolean') &&
+    (a.minimum_value === undefined || typeof a.minimum_value === 'number') &&
+    (a.ipi_tax === undefined || typeof a.ipi_tax === 'number') &&
+    (a.description === undefined || typeof a.description === 'string') &&
+    (a.photo === undefined || typeof a.photo === 'string') &&
+    (a.brand_id === undefined || typeof a.brand_id === 'number')
+  );
+}
+
 // ============================================================================
 // FORMATADORES DE RESPOSTA
 // ============================================================================
@@ -350,6 +486,40 @@ interface ActivityData {
   owner?: { name: string };
   start_at?: string;
   end_at?: string;
+}
+
+interface TeamData {
+  id: number;
+  name: string;
+  leader?: { id: number; name: string };
+  members?: { id: number; name: string }[];
+}
+
+interface GoalData {
+  id: number;
+  title: string;
+  type?: number;
+  visibility?: number;
+  goal_for?: number;
+  situation?: number;
+  start_at?: string;
+  end_at?: string;
+  type_of_period?: number;
+  observation?: string;
+  created_by?: { name: string };
+}
+
+interface ItemData {
+  id: number;
+  name: string;
+  type?: number;
+  category_id?: number;
+  reference?: string;
+  code?: string;
+  cost?: number;
+  status?: boolean;
+  minimum_value?: number;
+  description?: string;
 }
 
 interface ApiResponse<T> {
@@ -397,6 +567,40 @@ function formatActivitySummary(activity: ActivityData): string {
   return `[${activity.id}] ${activity.title} | ${status} | Tipo: ${activity.activity_type?.name || 'N/A'} | Responsável: ${activity.owner?.name || 'N/A'}`;
 }
 
+function formatTeamSummary(team: TeamData): string {
+  const leader = team.leader?.name ?? 'N/A';
+  const memberCount = team.members ? ` | ${team.members.length} membro(s)` : '';
+  return `[${team.id}] ${team.name} | Líder: ${leader}${memberCount}`;
+}
+
+function formatGoalSummary(goal: GoalData): string {
+  const typeMap: Record<number, string> = {
+    1: 'Oportunidade',
+    2: 'Atividade',
+    3: 'Previsão',
+    4: 'Proposta',
+    5: 'Ligação',
+    6: 'Assinatura',
+  };
+  const situationMap: Record<number, string> = { 1: 'Aberta', 2: 'Encerrada', 3: 'Agendada' };
+  const goalForMap: Record<number, string> = { 1: 'Quantidade', 2: 'Valor', 5: 'Duração' };
+  const type = typeMap[goal.type ?? 0] ?? 'N/A';
+  const situation = situationMap[goal.situation ?? 0] ?? 'N/A';
+  const goalFor = goalForMap[goal.goal_for ?? 0] ?? 'N/A';
+  const period = goal.start_at && goal.end_at ? `${goal.start_at} → ${goal.end_at}` : 'N/A';
+  return `[${goal.id}] ${goal.title} | Tipo: ${type} | Métrica: ${goalFor} | Situação: ${situation} | Período: ${period}`;
+}
+
+function formatItemSummary(item: ItemData): string {
+  const typeMap: Record<number, string> = { 0: 'Produto', 1: 'Recorrência (MRR)', 2: 'Serviço' };
+  const type = typeMap[item.type ?? 0] ?? 'N/A';
+  const value = item.minimum_value
+    ? `R$ ${item.minimum_value.toLocaleString('pt-BR')}`
+    : 'Sem valor';
+  const status = item.status === true ? 'Inativo' : 'Ativo';
+  return `[${item.id}] ${item.name} | ${type} | ${value} | ${status}${item.code ? ` | Código: ${item.code}` : ''}`;
+}
+
 function formatListResponse<T>(
   data: ApiResponse<T>,
   formatter: (item: T) => string,
@@ -425,7 +629,7 @@ function formatListResponse<T>(
 const server = new Server(
   {
     name: 'piperun-mcp-server',
-    version: '0.3.0',
+    version: '0.5.0',
   },
   {
     capabilities: {
@@ -938,6 +1142,94 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       // ===== OUTROS =====
       { name: 'list_items', description: 'Lista produtos.', inputSchema: paginatedSchema },
       {
+        name: 'get_item',
+        description: 'Obtém detalhes de um item (produto/serviço).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            item_id: { type: 'integer', description: 'ID do item' },
+          },
+          required: ['item_id'],
+        },
+      },
+      {
+        name: 'create_item',
+        description: 'Cria um novo item (produto, serviço ou recorrência/MRR).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            name: { type: 'string', description: 'Nome do item' },
+            type: {
+              type: 'integer',
+              description: 'Classificação: 0=produto, 1=recorrência (MRR), 2=serviço',
+            },
+            category_id: {
+              type: 'integer',
+              description: '(Opcional) ID da categoria/subcategoria',
+            },
+            reference: { type: 'string', description: '(Opcional) Referência do item' },
+            code: { type: 'string', description: '(Opcional) Código identificador' },
+            commission: { type: 'integer', description: '(Opcional) Valor de comissão fixa' },
+            cost: { type: 'number', description: '(Opcional) Custo associado' },
+            status: {
+              type: 'boolean',
+              description: '(Opcional) false=ativo, true=inativo',
+            },
+            minimum_value: { type: 'number', description: '(Opcional) Valor unitário' },
+            ipi_tax: { type: 'number', description: '(Opcional) Taxa de IPI' },
+            description: { type: 'string', description: '(Opcional) Descrição' },
+            photo: { type: 'string', description: '(Opcional) URL da imagem' },
+            brand_id: { type: 'integer', description: '(Opcional) ID da marca vinculada' },
+          },
+          required: ['name', 'type'],
+        },
+      },
+      {
+        name: 'update_item',
+        description: 'Atualiza um item (produto/serviço) existente.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            item_id: { type: 'integer', description: 'ID do item' },
+            name: { type: 'string', description: '(Opcional) Novo nome' },
+            type: {
+              type: 'integer',
+              description: '(Opcional) Classificação: 0=produto, 1=recorrência (MRR), 2=serviço',
+            },
+            category_id: {
+              type: 'integer',
+              description: '(Opcional) ID da categoria/subcategoria',
+            },
+            reference: { type: 'string', description: '(Opcional) Referência do item' },
+            code: { type: 'string', description: '(Opcional) Código identificador' },
+            commission: { type: 'integer', description: '(Opcional) Valor de comissão fixa' },
+            cost: { type: 'number', description: '(Opcional) Custo associado' },
+            status: {
+              type: 'boolean',
+              description: '(Opcional) false=ativo, true=inativo',
+            },
+            minimum_value: { type: 'number', description: '(Opcional) Valor unitário' },
+            ipi_tax: { type: 'number', description: '(Opcional) Taxa de IPI' },
+            description: { type: 'string', description: '(Opcional) Descrição' },
+            photo: { type: 'string', description: '(Opcional) URL da imagem' },
+            brand_id: { type: 'integer', description: '(Opcional) ID da marca vinculada' },
+          },
+          required: ['item_id'],
+        },
+      },
+      {
         name: 'list_users',
         description: 'Lista usuários/vendedores.',
         inputSchema: paginatedSchema,
@@ -952,6 +1244,310 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: 'list_loss_reasons',
         description: 'Lista motivos de perda.',
         inputSchema: simpleSchema,
+      },
+
+      // ===== EQUIPES (TEAMS) =====
+      {
+        name: 'list_teams',
+        description:
+          'Lista equipes do PipeRun. Use o parâmetro "with" para incluir membros, líder e grupos da equipe.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            id: { type: 'integer', description: '(Opcional) Filtra por ID da equipe' },
+            name: { type: 'string', description: '(Opcional) Filtra por nome da equipe' },
+            with: {
+              type: 'string',
+              description:
+                '(Opcional) Relações a incluir, separadas por vírgula: members, leader, teamGroups',
+            },
+            show: {
+              type: 'integer',
+              description: '(Opcional) Itens por página (padrão: 15, máx: 200)',
+            },
+            cursor: { type: 'string', description: '(Opcional) Cursor para próxima página' },
+            created_at_start: {
+              type: 'string',
+              description: '(Opcional) Data de criação inicial (ISO 8601)',
+            },
+            created_at_end: {
+              type: 'string',
+              description: '(Opcional) Data de criação final (ISO 8601)',
+            },
+            updated_at_start: {
+              type: 'string',
+              description: '(Opcional) Data de atualização inicial (ISO 8601)',
+            },
+            updated_at_end: {
+              type: 'string',
+              description: '(Opcional) Data de atualização final (ISO 8601)',
+            },
+          },
+          required: [],
+        },
+      },
+      {
+        name: 'get_team',
+        description: 'Obtém detalhes de uma equipe específica.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            team_id: { type: 'integer', description: 'ID da equipe' },
+            with: {
+              type: 'string',
+              description:
+                '(Opcional) Relações a incluir, separadas por vírgula: members, leader, teamGroups',
+            },
+          },
+          required: ['team_id'],
+        },
+      },
+
+      // ===== METAS AVANÇADAS =====
+      {
+        name: 'list_goals',
+        description:
+          'Lista metas avançadas do PipeRun. Permite filtrar por tipo, situação, usuário, pipeline, etapa, período e outros critérios.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            title: { type: 'string', description: '(Opcional) Título da meta' },
+            type: {
+              type: 'integer',
+              description:
+                '(Opcional) Tipo: 1=Oportunidade, 2=Atividade, 3=Previsão, 4=Proposta, 5=Ligação, 6=Assinatura',
+            },
+            situation: {
+              type: 'integer',
+              description: '(Opcional) Situação: 1=Aberta, 2=Encerrada, 3=Agendada',
+            },
+            visibility: {
+              type: 'integer',
+              description: '(Opcional) Visibilidade: 1=Público, 2=Privado, 3=Envolvidos',
+            },
+            goal_for: {
+              type: 'integer',
+              description: '(Opcional) Métrica: 1=Quantidade, 2=Valor, 5=Duração',
+            },
+            user_id: { type: 'integer', description: '(Opcional) ID do usuário' },
+            pipeline_id: { type: 'integer', description: '(Opcional) ID do funil' },
+            stage_id: { type: 'integer', description: '(Opcional) ID da etapa' },
+            created_by_id: { type: 'integer', description: '(Opcional) ID do criador' },
+            start_at_start: {
+              type: 'string',
+              description: '(Opcional) Data início do período inicial (yyyy-mm-dd)',
+            },
+            start_at_end: {
+              type: 'string',
+              description: '(Opcional) Data fim do período inicial (yyyy-mm-dd)',
+            },
+            end_at_start: {
+              type: 'string',
+              description: '(Opcional) Data início do período final (yyyy-mm-dd)',
+            },
+            end_at_end: {
+              type: 'string',
+              description: '(Opcional) Data fim do período final (yyyy-mm-dd)',
+            },
+            show: {
+              type: 'integer',
+              description: '(Opcional) Itens por página (padrão: 15, máx: 200)',
+            },
+            cursor: { type: 'string', description: '(Opcional) Cursor para próxima página' },
+            sort: { type: 'string', description: '(Opcional) Campo para ordenação' },
+            desc: { type: 'boolean', description: '(Opcional) Ordenação decrescente' },
+          },
+          required: [],
+        },
+      },
+      {
+        name: 'get_goal',
+        description: 'Obtém detalhes de uma meta avançada específica.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            goal_id: { type: 'integer', description: 'ID da meta' },
+          },
+          required: ['goal_id'],
+        },
+      },
+      {
+        name: 'get_goal_stats',
+        description: 'Obtém estatísticas/progresso de uma meta avançada.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            goal_id: { type: 'integer', description: 'ID da meta' },
+          },
+          required: ['goal_id'],
+        },
+      },
+      {
+        name: 'create_goal',
+        description: 'Cria uma nova meta avançada no PipeRun.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            title: { type: 'string', description: 'Título da meta' },
+            type: {
+              type: 'integer',
+              description:
+                'Tipo: 1=Oportunidade, 2=Atividade, 3=Previsão, 4=Proposta, 5=Ligação, 6=Assinatura',
+            },
+            start_at: { type: 'string', description: 'Data de início (yyyy-mm-dd)' },
+            end_at: { type: 'string', description: 'Data de término (yyyy-mm-dd)' },
+            visibility: {
+              type: 'integer',
+              description: '(Opcional) Visibilidade: 1=Público, 2=Privado, 3=Envolvidos',
+            },
+            goal_for: {
+              type: 'integer',
+              description:
+                '(Opcional) Métrica. Obrigatório para type 1, 4 ou 5. 1=Quantidade, 2=Valor, 5=Duração',
+            },
+            observation: { type: 'string', description: '(Opcional) Observação' },
+            type_of_period: {
+              type: 'integer',
+              description:
+                '(Opcional) Período: 0=Personalizado, 1=Diário, 2=Semanal, 3=Quinzenal, 4=Mensal, 5=Bimestral, 6=Trimestral, 7=Semestral, 8=Anual',
+            },
+            activity_type_id: {
+              type: 'integer',
+              description: '(Opcional) ID do tipo de atividade (para type=2)',
+            },
+            origin_id: { type: 'integer', description: '(Opcional) ID da origem da oportunidade' },
+            region_id: { type: 'integer', description: '(Opcional) ID da região' },
+            city_id: { type: 'integer', description: '(Opcional) ID da cidade' },
+            state: { type: 'string', description: '(Opcional) UF (ex: SP, RS)' },
+            segment_id: { type: 'integer', description: '(Opcional) ID do segmento' },
+            pipelines: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs dos funis',
+            },
+            stages: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs das etapas',
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs das tags',
+            },
+            users: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs dos usuários envolvidos na meta',
+            },
+          },
+          required: ['title', 'type', 'start_at', 'end_at'],
+        },
+      },
+      {
+        name: 'update_goal',
+        description: 'Atualiza uma meta avançada existente.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            goal_id: { type: 'integer', description: 'ID da meta a atualizar' },
+            title: { type: 'string', description: '(Opcional) Novo título' },
+            type: {
+              type: 'integer',
+              description:
+                '(Opcional) Tipo: 1=Oportunidade, 2=Atividade, 3=Previsão, 4=Proposta, 5=Ligação, 6=Assinatura',
+            },
+            start_at: { type: 'string', description: '(Opcional) Nova data de início (yyyy-mm-dd)' },
+            end_at: {
+              type: 'string',
+              description: '(Opcional) Nova data de término (yyyy-mm-dd)',
+            },
+            visibility: {
+              type: 'integer',
+              description: '(Opcional) Visibilidade: 1=Público, 2=Privado, 3=Envolvidos',
+            },
+            goal_for: {
+              type: 'integer',
+              description: '(Opcional) Métrica: 1=Quantidade, 2=Valor, 5=Duração',
+            },
+            observation: { type: 'string', description: '(Opcional) Observação' },
+            type_of_period: {
+              type: 'integer',
+              description:
+                '(Opcional) Período: 0=Personalizado, 1=Diário, 2=Semanal, 3=Quinzenal, 4=Mensal, 5=Bimestral, 6=Trimestral, 7=Semestral, 8=Anual',
+            },
+            activity_type_id: { type: 'integer', description: '(Opcional) ID do tipo de atividade' },
+            origin_id: { type: 'integer', description: '(Opcional) ID da origem' },
+            region_id: { type: 'integer', description: '(Opcional) ID da região' },
+            city_id: { type: 'integer', description: '(Opcional) ID da cidade' },
+            state: { type: 'string', description: '(Opcional) UF (ex: SP, RS)' },
+            segment_id: { type: 'integer', description: '(Opcional) ID do segmento' },
+            pipelines: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs dos funis',
+            },
+            stages: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs das etapas',
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs das tags',
+            },
+            users: {
+              type: 'array',
+              items: { type: 'integer' },
+              description: '(Opcional) IDs dos usuários',
+            },
+          },
+          required: ['goal_id'],
+        },
+      },
+      {
+        name: 'delete_goal',
+        description: 'Exclui uma meta avançada.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            goal_id: { type: 'integer', description: 'ID da meta' },
+          },
+          required: ['goal_id'],
+        },
       },
     ],
   };
@@ -1046,6 +1642,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
                 formatActivitySummary,
                 'atividade'
               ),
+            },
+          ],
+        };
+      } else if (name === 'list_items') {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formatListResponse(data as ApiResponse<ItemData>, formatItemSummary, 'item'),
             },
           ],
         };
@@ -1321,6 +1926,63 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         return { content: [{ type: 'text', text: `✅ Empresa ${toolArgs.company_id} excluída.` }] };
       }
 
+      // ===== ITEMS (PRODUTOS/SERVIÇOS) =====
+      case 'get_item': {
+        if (typeof toolArgs.item_id !== 'number') {
+          throw new McpError(ErrorCode.InvalidParams, "'item_id' é obrigatório.");
+        }
+        const data = await requestWithRetry<ApiResponse<ItemData>>({
+          method: 'GET',
+          url: `/items/${toolArgs.item_id}`,
+          headers,
+        });
+        const item = data.data as ItemData;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Item encontrado:\n${formatItemSummary(item)}\n\nDetalhes:\n${JSON.stringify(item, null, 2)}`,
+            },
+          ],
+        };
+      }
+
+      case 'create_item': {
+        if (!isValidCreateItemArgs(toolArgs)) {
+          throw new McpError(ErrorCode.InvalidParams, "'name' e 'type' são obrigatórios.");
+        }
+        const data = await requestWithRetry<ApiResponse<ItemData>>({
+          method: 'POST',
+          url: '/items',
+          data: toolArgs,
+          headers,
+        });
+        const item = data.data as ItemData;
+        return {
+          content: [{ type: 'text', text: `✅ Item criado!\n${formatItemSummary(item)}` }],
+        };
+      }
+
+      case 'update_item': {
+        if (!isValidUpdateItemArgs(toolArgs)) {
+          throw new McpError(ErrorCode.InvalidParams, "'item_id' é obrigatório.");
+        }
+        const { item_id, ...updateData } = toolArgs;
+        if (Object.keys(updateData).length === 0) {
+          throw new McpError(ErrorCode.InvalidParams, 'Nenhum dado para atualizar.');
+        }
+        const data = await requestWithRetry<ApiResponse<ItemData>>({
+          method: 'PUT',
+          url: `/items/${item_id}`,
+          data: updateData,
+          headers,
+        });
+        const item = data.data as ItemData;
+        return {
+          content: [{ type: 'text', text: `✅ Item atualizado!\n${formatItemSummary(item)}` }],
+        };
+      }
+
       // ===== ACTIVITIES =====
       case 'get_activity': {
         if (typeof toolArgs.activity_id !== 'number') {
@@ -1432,6 +2094,168 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         return { content: [{ type: 'text', text: `✅ Nota ${toolArgs.note_id} excluída.` }] };
       }
 
+      // ===== EQUIPES (TEAMS) =====
+      case 'list_teams': {
+        const data = await requestWithRetry<ApiResponse<TeamData>>({
+          method: 'GET',
+          url: '/teams',
+          params: toolArgs,
+          headers,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formatListResponse(data, formatTeamSummary, 'equipe'),
+            },
+          ],
+        };
+      }
+
+      case 'get_team': {
+        if (typeof toolArgs.team_id !== 'number') {
+          throw new McpError(ErrorCode.InvalidParams, "'team_id' é obrigatório.");
+        }
+        const params = toolArgs.with ? { with: toolArgs.with } : undefined;
+        const data = await requestWithRetry<ApiResponse<TeamData>>({
+          method: 'GET',
+          url: `/teams/${toolArgs.team_id}`,
+          params,
+          headers,
+        });
+        const team = data.data as TeamData;
+        const members = team.members?.map((m) => `  - [${m.id}] ${m.name}`).join('\n') ?? '';
+        const membersText = members ? `\n\nMembros:\n${members}` : '';
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Equipe encontrada:\n${formatTeamSummary(team)}${membersText}\n\nDetalhes completos:\n${JSON.stringify(team, null, 2)}`,
+            },
+          ],
+        };
+      }
+
+      // ===== METAS AVANÇADAS =====
+      case 'list_goals': {
+        const data = await requestWithRetry<ApiResponse<GoalData>>({
+          method: 'GET',
+          url: '/advanced-goals',
+          params: toolArgs,
+          headers,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formatListResponse(data, formatGoalSummary, 'meta'),
+            },
+          ],
+        };
+      }
+
+      case 'get_goal': {
+        if (typeof toolArgs.goal_id !== 'number') {
+          throw new McpError(ErrorCode.InvalidParams, "'goal_id' é obrigatório.");
+        }
+        const data = await requestWithRetry<ApiResponse<GoalData>>({
+          method: 'GET',
+          url: `/advanced-goals/${toolArgs.goal_id}`,
+          headers,
+        });
+        const goal = data.data as GoalData;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Meta encontrada:\n${formatGoalSummary(goal)}\n\nDetalhes completos:\n${JSON.stringify(goal, null, 2)}`,
+            },
+          ],
+        };
+      }
+
+      case 'get_goal_stats': {
+        if (typeof toolArgs.goal_id !== 'number') {
+          throw new McpError(ErrorCode.InvalidParams, "'goal_id' é obrigatório.");
+        }
+        const data = await requestWithRetry({
+          method: 'GET',
+          url: `/advanced-goals/${toolArgs.goal_id}/stats`,
+          headers,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Estatísticas da meta ${toolArgs.goal_id}:\n${JSON.stringify(data, null, 2)}`,
+            },
+          ],
+        };
+      }
+
+      case 'create_goal': {
+        if (!isValidCreateGoalArgs(toolArgs)) {
+          throw new McpError(
+            ErrorCode.InvalidParams,
+            "'title', 'type', 'start_at' e 'end_at' são obrigatórios."
+          );
+        }
+        const data = await requestWithRetry<ApiResponse<GoalData>>({
+          method: 'POST',
+          url: '/advanced-goals',
+          data: toolArgs,
+          headers,
+        });
+        const goal = data.data as GoalData;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `✅ Meta criada com sucesso!\n${formatGoalSummary(goal)}`,
+            },
+          ],
+        };
+      }
+
+      case 'update_goal': {
+        if (!isValidUpdateGoalArgs(toolArgs)) {
+          throw new McpError(ErrorCode.InvalidParams, "'goal_id' é obrigatório.");
+        }
+        const { goal_id, ...updateData } = toolArgs;
+        if (Object.keys(updateData).length === 0) {
+          throw new McpError(ErrorCode.InvalidParams, 'Nenhum dado para atualizar.');
+        }
+        const data = await requestWithRetry<ApiResponse<GoalData>>({
+          method: 'PUT',
+          url: `/advanced-goals/${goal_id}`,
+          data: updateData,
+          headers,
+        });
+        const goal = data.data as GoalData;
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `✅ Meta atualizada!\n${formatGoalSummary(goal)}`,
+            },
+          ],
+        };
+      }
+
+      case 'delete_goal': {
+        if (typeof toolArgs.goal_id !== 'number') {
+          throw new McpError(ErrorCode.InvalidParams, "'goal_id' é obrigatório.");
+        }
+        await requestWithRetry({
+          method: 'DELETE',
+          url: `/advanced-goals/${toolArgs.goal_id}`,
+          headers,
+        });
+        return {
+          content: [{ type: 'text', text: `✅ Meta ${toolArgs.goal_id} excluída com sucesso.` }],
+        };
+      }
+
       default:
         throw new McpError(ErrorCode.MethodNotFound, `Ferramenta desconhecida: ${name}`);
     }
@@ -1491,7 +2315,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(
-    `Servidor MCP PipeRun v0.3.0 iniciado${GLOBAL_API_TOKEN ? ' (token configurado via env)' : ''}`
+    `Servidor MCP PipeRun v0.5.0 iniciado${GLOBAL_API_TOKEN ? ' (token configurado via env)' : ''}`
   );
 }
 
