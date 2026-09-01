@@ -754,6 +754,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
             },
             deal_id: { type: 'integer', description: 'ID da oportunidade' },
+            with: {
+              type: 'string',
+              description:
+                '(Opcional) Relações a incluir, separadas por vírgula: proposals (itens/valores da proposta), etc.',
+            },
           },
           required: ['deal_id'],
         },
@@ -1805,9 +1810,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
         if (typeof toolArgs.deal_id !== 'number') {
           throw new McpError(ErrorCode.InvalidParams, "'deal_id' é obrigatório.");
         }
+        const params = toolArgs.with ? { with: toolArgs.with } : undefined;
         const data = await requestWithRetry<ApiResponse<DealData>>({
           method: 'GET',
           url: `/deals/${toolArgs.deal_id}`,
+          params,
           headers,
         });
         const deal = data.data as DealData;
