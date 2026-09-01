@@ -522,6 +522,15 @@ interface ItemData {
   description?: string;
 }
 
+interface ItemCategoryData {
+  id: number;
+  category_id?: number;
+  name: string;
+  reference?: string;
+  description?: string;
+  deleted?: boolean;
+}
+
 interface ApiResponse<T> {
   data?: T | T[];
   meta?: {
@@ -599,6 +608,11 @@ function formatItemSummary(item: ItemData): string {
     : 'Sem valor';
   const status = item.status === true ? 'Inativo' : 'Ativo';
   return `[${item.id}] ${item.name} | ${type} | ${value} | ${status}${item.code ? ` | Código: ${item.code}` : ''}`;
+}
+
+function formatItemCategorySummary(category: ItemCategoryData): string {
+  const parent = category.category_id ? ` | Categoria pai: ${category.category_id}` : '';
+  return `[${category.id}] ${category.name}${parent}`;
 }
 
 function formatListResponse<T>(
@@ -1141,6 +1155,41 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
       // ===== OUTROS =====
       { name: 'list_items', description: 'Lista produtos.', inputSchema: paginatedSchema },
+      {
+        name: 'list_item_categories',
+        description: 'Lista categorias de item (produto/serviço).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            api_token: {
+              type: 'string',
+              description: 'Token da API (opcional se PIPERUN_API_TOKEN configurado)',
+            },
+            show: {
+              type: 'integer',
+              description: '(Opcional) Itens por página (padrão: 200)',
+            },
+            cursor: { type: 'string', description: '(Opcional) Cursor para próxima página' },
+            created_at_start: {
+              type: 'string',
+              description: '(Opcional) Data de criação inicial (ISO 8601)',
+            },
+            created_at_end: {
+              type: 'string',
+              description: '(Opcional) Data de criação final (ISO 8601)',
+            },
+            updated_at_start: {
+              type: 'string',
+              description: '(Opcional) Data de atualização inicial (ISO 8601)',
+            },
+            updated_at_end: {
+              type: 'string',
+              description: '(Opcional) Data de atualização final (ISO 8601)',
+            },
+          },
+          required: [],
+        },
+      },
       {
         name: 'get_item',
         description: 'Obtém detalhes de um item (produto/serviço).',
@@ -2098,6 +2147,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           headers,
         });
         return { content: [{ type: 'text', text: `✅ Nota ${toolArgs.note_id} excluída.` }] };
+      }
+
+      // ===== CATEGORIAS DE ITEM =====
+      case 'list_item_categories': {
+        const data = await requestWithRetry<ApiResponse<ItemCategoryData>>({
+          method: 'GET',
+          url: '/itemCategories',
+          params: toolArgs,
+          headers,
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formatListResponse(data, formatItemCategorySummary, 'categoria de item'),
+            },
+          ],
+        };
       }
 
       // ===== EQUIPES (TEAMS) =====
